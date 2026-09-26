@@ -1,0 +1,52 @@
+name: CI - Build Modified OCLP (Intel macOS)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build OpenCore-Patcher.app
+    runs-on: macos-15-intel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+
+      - name: Prepare Assets
+        run: >
+          python3 Build-Project.command
+          --run-as-individual-steps --reset-dmg-cache
+          --prepare-assets
+
+      - name: Build Application
+        run: >
+          python3 Build-Project.command
+          --run-as-individual-steps
+          --prepare-application
+          --reset-pyinstaller-cache
+          --git-branch "${{ github.ref }}"
+          --git-commit-url "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          --git-commit-date "${{ github.event.head_commit.timestamp }}"
+
+      - name: Archive Application
+        run: |
+          cd dist
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent OpenCore-Patcher.app OpenCore-Patcher.app.zip
+
+      - name: Upload Application
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenCore-Patcher-Modified
+          path: dist/OpenCore-Patcher.app.zip
+          if-no-files-found: error
