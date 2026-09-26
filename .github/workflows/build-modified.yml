@@ -23,6 +23,13 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
 
+      - name: Build privileged helper (debug)
+        run: |
+          cd ci_tooling/privileged_helper_tool
+          make debug
+          /usr/bin/codesign --force --sign - com.dortania.opencore-legacy-patcher.privileged-helper
+          /usr/bin/file com.dortania.opencore-legacy-patcher.privileged-helper
+
       - name: Prepare Assets
         run: >
           python3 Build-Project.command
@@ -49,4 +56,11 @@ jobs:
         with:
           name: OpenCore-Patcher-Modified
           path: dist/OpenCore-Patcher.app.zip
+          if-no-files-found: error
+
+      - name: Upload privileged helper (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: privileged-helper-debug
+          path: ci_tooling/privileged_helper_tool/com.dortania.opencore-legacy-patcher.privileged-helper
           if-no-files-found: error

@@ -106,14 +106,14 @@ int main(int argc, const char * argv[]) {
         NSDictionary *processSigningInformation = getSigningInformationFromPath(processPath);
         NSDictionary *parentProcessSigningInformation = getSigningInformationFromPath(parentProcessPath);
 
+        #ifdef DEBUG
+        // Skip all signing validation in debug mode
+        // DO NOT USE IN PRODUCTION
+        #else
         if (processSigningInformation == nil || parentProcessSigningInformation == nil) {
             return OCLP_PHT_ERROR_SIGNING_INFORMATION_MISSING;
         }
 
-        #ifdef DEBUG
-        // Skip Team ID check in debug mode
-        // DO NOT USE IN PRODUCTION
-        #else
         // Check Team ID
         if (![processSigningInformation[@"teamid"] isEqualToString:VALID_CLIENT_TEAM_ID] || ![parentProcessSigningInformation[@"teamid"] isEqualToString:VALID_CLIENT_TEAM_ID]) {
             return OCLP_PHT_ERROR_INVALID_TEAM_ID;
